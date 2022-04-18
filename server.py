@@ -10,37 +10,29 @@ PORT = 8000
 SERVER = socket.gethostbyname(socket.gethostname())
 ADDR = (SERVER, PORT)
 FORMAT = 'utf-8'
-DISCONNEXT_MSG = "!DISCONNECT"
+
+DISCONNECT_MSG = "!DISCONNECT"
+REQUEST_DATA_MSG = "!REQ_DATA"
 
 server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 server.bind(ADDR)
 
-# def send_currency(curr):
-#     message = curr.encode(FORMAT)
-#     msg_length = len(message)
-#     send_length = str(msg_length).encode(FORMAT)
-#     send_length += b' ' * (HEADER - len(send_length))
-#     server.send(send_length)
-#     server.send(message)
-
 
 def handle_client(conn, addr):
     print(f"[NEW CONNETION] {addr} connected.")
-    cd.getData()
-    data = pickle.dumps(cd.getCurrencies())
-    conn.send(data)
-    # for cur in cd:
-    #     # send_currency(str(cur))
-    # print
     connected = True
     while connected:
         msg_length = conn.recv(HEADER).decode(FORMAT)
         if msg_length:
             msg_length = int(msg_length)
             msg = conn.recv(msg_length).decode(FORMAT)
-            if msg == DISCONNEXT_MSG:
+            if msg == DISCONNECT_MSG:
                 connected = False
-            print(f"[{addr}]{msg}")
+            if msg == REQUEST_DATA_MSG:
+                cd.getData()
+                data = pickle.dumps(cd.getCurrencies())
+                conn.send(data)
+        print(f"[{addr}] - - {msg}")
 
     conn.close()
 
