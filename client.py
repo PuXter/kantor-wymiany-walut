@@ -2,6 +2,7 @@ import socket
 import pickle
 from currency import CurrencyData
 from datetime import datetime
+from currency import Currency 
 
 HEADER = 64
 PORT = 8000
@@ -19,6 +20,22 @@ REC_MSG = False
 
 timestamp = ""
 
+currencies = []
+
+def update_currencies(data):
+    currencies.clear()
+    i = 0
+    for line in reversed(data):
+        if(i < 34):
+            res = " ".join(reversed(line.split(" ")))
+            res = res.split()
+            c = Currency()
+            c.name = line.rsplit(' 1',2)[0]  
+            c.code = str(res[2]) + " " + str(res[1])
+            c.value = float(res[0])
+            currencies.append(c)
+            i = i + 1
+
 def menu():
     print()
     if(timestamp!=""):
@@ -26,6 +43,7 @@ def menu():
     print()
     print("0 - Exit client")
     print("1 - Download currency data")
+    print("2 - Show currency data")
     print()
 
 def send(msg):
@@ -39,8 +57,7 @@ def send(msg):
         msg_length = client.recv(102400)
         if msg_length is not None:
             data = pickle.loads(msg_length)
-            for x in data:
-                print(x)
+            update_currencies(data)
 
 menu()
 inp = input("GIVE COMMAND ")
@@ -50,6 +67,10 @@ while(inp != "0"):
         send(REQUEST_DATA_MSG)
         now = datetime.now()
         timestamp = now.strftime("%H:%M:%S")
+    if(inp=="2"):
+        if(len(currencies) > 0):
+            for cur in currencies:
+                print(cur)  
     else:
         REC_MSG = False
         send(inp)
