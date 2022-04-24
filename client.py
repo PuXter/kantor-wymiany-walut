@@ -34,6 +34,22 @@ timestamp = ""
 #Tablica z danymi o walutach
 currencies = []
 
+#Funkcja sluzy do przeliczania zlotowek na podana ilosc podanej waluty
+def count_currencies(c_amount, c_to):
+    ct = Currency()
+    #Wyszukanie waluty w tablicy walut
+    for data in currencies:
+        if(data.code==c_to):
+            ct = data
+            print(f"Currency: {data}")
+    if(ct.code==""): 
+        print("Error: Given currency code is invalid")
+        return
+    #Przeliczenie i wyswietlenie wyniku
+    result = round(float(c_amount) / float(ct.value), 3)
+    print(f"{c_amount} PLN = {result} {c_to}")
+    
+
 #Funkcja do aktualizacji danych o walutach
 def update_currencies(data):
     currencies.clear()
@@ -47,7 +63,7 @@ def update_currencies(data):
             #Stworzenie obiektu waluty
             c = Currency()
             c.name = line.rsplit(' 1',2)[0]  
-            c.code = str(res[2]) + " " + str(res[1])
+            c.code = str(res[1])
             c.value = float(res[0])
             #Dodanie waluty do tablicy
             currencies.append(c)
@@ -62,6 +78,7 @@ def menu():
     print("0 - Exit client")
     print("1 - Download currency data")
     print("2 - Show currency data")
+    print("3 - Count currencies")
     print()
 
 #Funkcja wysylajaca wiadomosc do serwera
@@ -103,6 +120,11 @@ while(inp != "0"):
         if(len(currencies) > 0):
             for cur in currencies:
                 print(cur)  
+    #3 - przeliczanie zlotowek na podana walute
+    if(inp=="3"):
+        amount = input("How many? ")
+        curr = input("To which currency? ")
+        count_currencies(amount,curr)
     #reszta - echo do testow
     else:
         rec_msg = False
