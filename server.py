@@ -66,20 +66,26 @@ def handle_client(conn, addr, is_ok):
 
 #Funkcja rozpoczynajca dzialanie serwera
 def start():
-    server.listen()
-    print(f"[LISTENING] Server is listening in {SERVER}")
-    while True:
-        if(allow_new_client(threading.active_count() - 1) == True):
-            #Akceptowanie nadchodzacego polaczenia klienta
-            con, addr = server.accept()
-            #Kazdy klient jest oddzielnym watkiem
-            thread = threading.Thread(target=handle_client, args=(con, addr,True))
-            thread.start()
-            print(f"[ACTIVE CONNECTIONS] {threading.active_count() - 1}")
-        else:
-            con, addr = server.accept()
-            thread = threading.Thread(target=handle_client, args=(con, addr,False))
-            thread.start()
+    try:
+        server.listen()
+        print(f"[LISTENING] Server is listening in {SERVER}")
+        while True:
+            if(allow_new_client(threading.active_count() - 1) == True):
+                #Akceptowanie nadchodzacego polaczenia klienta
+                con, addr = server.accept()
+                #Kazdy klient jest oddzielnym watkiem
+                thread = threading.Thread(target=handle_client, args=(con, addr,True))
+                thread.start()
+                print(f"[ACTIVE CONNECTIONS] {threading.active_count() - 1}")
+            else:
+                con, addr = server.accept()
+                thread = threading.Thread(target=handle_client, args=(con, addr,False))
+                thread.start()
+    except KeyboardInterrupt:
+        server.close()
+        print()
+        print("Server has been closed")
+        return
 
 
 #Info o dzialaniu serwera

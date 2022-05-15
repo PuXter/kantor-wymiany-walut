@@ -22,8 +22,6 @@ REQUEST_DATA_MSG = "!REQ_DATA"
 
 #Stworzenie socketu klienta
 client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-#Polaczenie z serwerem
-client.connect(ADDR)
 
 #Flaga oczekiwania na wiadomosc
 rec_msg = False
@@ -83,27 +81,38 @@ def menu():
 
 #Funkcja wysylajaca wiadomosc do serwera
 def send(msg):
-    #Kodowanie wiadomosci
-    message = msg.encode(FORMAT)
-    #Dlugosc wiadomosci
-    msg_length = len(message)
-    #Wyslanie dlugosci tekstu
-    send_length = str(msg_length).encode(FORMAT)
-    #Dodanie ew brakujących bitów do wiadomosci dlugosci tekstu
-    send_length += b' ' * (HEADER - len(send_length))
-    #Wyslanie informacji o dlugosci wiadomosci
-    client.send(send_length)
-    #Wyslanie wiadmosci
-    client.send(message)
-    #Jesli flaga rec_msg ustawiona na true (przygotowanie do odebrania wiadomosci od serwera)
-    if (rec_msg):
-        #Dlugosc pobranej wiadomosci
-        msg_length = client.recv(102400)
-        if msg_length is not None:
-            #Zaladowanie danych o walutach
-            data = pickle.loads(msg_length)
-            #Zaktualizowanie danych klienta o walutach
-            update_currencies(data)
+    try:
+        #Kodowanie wiadomosci
+        message = msg.encode(FORMAT)
+        #Dlugosc wiadomosci
+        msg_length = len(message)
+        #Wyslanie dlugosci tekstu
+        send_length = str(msg_length).encode(FORMAT)
+        #Dodanie ew brakujących bitów do wiadomosci dlugosci tekstu
+        send_length += b' ' * (HEADER - len(send_length))
+        #Wyslanie informacji o dlugosci wiadomosci
+        client.send(send_length)
+        #Wyslanie wiadmosci
+        client.send(message)
+        #Jesli flaga rec_msg ustawiona na true (przygotowanie do odebrania wiadomosci od serwera)
+        if (rec_msg):
+            #Dlugosc pobranej wiadomosci
+            msg_length = client.recv(102400)
+            if msg_length is not None:
+                #Zaladowanie danych o walutach
+                data = pickle.loads(msg_length)
+                #Zaktualizowanie danych klienta o walutach
+                update_currencies(data)
+    except BrokenPipeError:
+        print("Error: Connection with server has been broken")
+        exit()
+
+#Polaczenie z serwerem
+try:
+    client.connect(ADDR)
+except ConnectionRefusedError:
+    print("Error: Unable to contact server")
+    exit()
 
 #Proste menu klienta
 menu()
@@ -128,7 +137,7 @@ while(inp != "0"):
     #reszta - echo do testow
     else:
         rec_msg = False
-        send(inp)
+        print("Error: Invalid command")
     menu()
     inp = input("GIVE COMMAND ")
 
