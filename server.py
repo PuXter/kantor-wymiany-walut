@@ -25,8 +25,6 @@ REQUEST_DATA_MSG = "!REQ_DATA"
 
 #Stworzenie socketu serwera
 server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-#Przyedzielenie adresu do serwera
-server.bind(ADDR)
 
 def allow_new_client(num):
     if(num < MAX_CLIENTS): return True
@@ -67,6 +65,8 @@ def handle_client(conn, addr, is_ok):
 #Funkcja rozpoczynajca dzialanie serwera
 def start():
     try:
+        #Przyedzielenie adresu do serwera
+        server.bind(ADDR)
         server.listen()
         print(f"[LISTENING] Server is listening in {SERVER}")
         while True:
@@ -86,7 +86,10 @@ def start():
         print()
         print("Server has been closed")
         return
-
+    except OSError:
+        print("Error: Unable to start server on given address")
+        print("Note: If you're trying to restart server, wait few minutes and try to run it again")
+        return
 
 #Info o dzialaniu serwera
 print("[STARTING] server is starting...")

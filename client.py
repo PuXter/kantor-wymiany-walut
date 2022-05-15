@@ -3,6 +3,7 @@ import pickle
 from currency import CurrencyData
 from datetime import datetime
 from currency import Currency 
+from currency import SimpleCurrency 
 
 #Dlugosc wiadomosci
 HEADER = 64
@@ -32,20 +33,42 @@ timestamp = ""
 #Tablica z danymi o walutach
 currencies = []
 
+#Tablica z uproszczonymi danymi do przeliczania
+simple_currencies = []
+
 #Funkcja sluzy do przeliczania zlotowek na podana ilosc podanej waluty
-def count_currencies(c_amount, c_to):
-    ct = Currency()
+def count_currencies(c_amount, c_from,c_to):
+
+    if(not c_amount.isdigit()):
+        print("Error: Invalid given data")
+        return
+
+    if(float(c_amount) <= 0 or c_from == c_to):
+        print("Error: Invalid given data")
+        return
+
+    c_from=c_from.upper()
+    c_to=c_to.upper()
+
+    cf = SimpleCurrency()
+    ct = SimpleCurrency()
+
     #Wyszukanie waluty w tablicy walut
-    for data in currencies:
+    for data in simple_currencies:
+        if(data.code==c_from):
+            cf = data
+            print(f"Currency from: {data}")
         if(data.code==c_to):
             ct = data
-            print(f"Currency: {data}")
-    if(ct.code==""): 
+            print(f"Currency to: {data}")
+
+    if(ct.code=="" or cf.code=="" or float(ct.value)==0.0 or float(cf.value)==0.0): 
         print("Error: Given currency code is invalid")
         return
+
     #Przeliczenie i wyswietlenie wyniku
-    result = round(float(c_amount) / float(ct.value), 3)
-    print(f"{c_amount} PLN = {result} {c_to}")
+    result = round( (float(c_amount) / float(cf.value)) * float(ct.value)  , 3)
+    print(f"{c_amount} {c_from} = {result} {c_to}")
     
 
 #Funkcja do aktualizacji danych o walutach
@@ -61,11 +84,21 @@ def update_currencies(data):
             #Stworzenie obiektu waluty
             c = Currency()
             c.name = line.rsplit(' 1',2)[0]  
-            c.code = str(res[1])
+            c.code = str(res[2]) + " " + str(res[1])
             c.value = float(res[0])
             #Dodanie waluty do tablicy
             currencies.append(c)
             i = i + 1
+
+#Funkcja upraszczajaca waluty do przeliczania
+def simplify_currencies(curr):
+    simple_currencies.clear()
+    for data in curr:
+        sc = SimpleCurrency()
+        v = float(data.code.rsplit()[0])
+        sc.value = round(v/data.value, 3)
+        sc.code = data.code.rsplit()[1]
+        simple_currencies.append(sc)
 
 #Funkjca wyswietlajaca menu dla klienta
 def menu():
@@ -116,7 +149,7 @@ except ConnectionRefusedError:
 
 #Proste menu klienta
 menu()
-inp = input("GIVE COMMAND ")
+inp = input("> ")
 while(inp != "0"):
     #1 - aktualizacja danych o walutach
     if(inp=="1"):
@@ -124,22 +157,23 @@ while(inp != "0"):
         send(REQUEST_DATA_MSG)
         now = datetime.now()
         timestamp = now.strftime("%H:%M:%S")
+        simplify_currencies(currencies)
     #2 - wyswietlenie danych o walutach
-    if(inp=="2"):
-        if(len(currencies) > 0):
-            for cur in currencies:
+    elif(inp=="2"):
+        if(len(simple_currencies) > 0):
+            for cur in simple_currencies:
                 print(cur)  
     #3 - przeliczanie zlotowek na podana walute
-    if(inp=="3"):
+    elif(inp=="3"):
         amount = input("How many? ")
-        curr = input("To which currency? ")
-        count_currencies(amount,curr)
-    #reszta - echo do testow
+        curr_from = input("From which currency? ")
+        curr_to = input("To which currency? ")
+        count_currencies(amount,curr_from,curr_to)
     else:
         rec_msg = False
         print("Error: Invalid command")
     menu()
-    inp = input("GIVE COMMAND ")
+    inp = input("> ")
 
 #Rozlaczenie po komendzie "0"
 rec_msg = False
