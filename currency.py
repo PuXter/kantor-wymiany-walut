@@ -67,3 +67,12 @@ class CurrencyData:
         for cur in currencies:
             print(cur)
             
+class SimpleCurrency:
+    
+    #Atrybuty waluty takie jak kod i wartosc
+    code = ""
+    value = 0.0
+
+    #Nadpisanie metody __str__
+    def __str__(self):
+        return " 1 PLN =  " + str(self.value) + " " + self.code 
