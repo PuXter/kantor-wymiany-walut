@@ -6,7 +6,7 @@ import pickle
 cd = CurrencyData()
 
 #Dlugosc wiadomosci
-HEADER = 64
+HEADER = 16
 #Port do wysylania wiadomosci
 PORT = 8000
 #IP serwera
@@ -15,8 +15,9 @@ SERVER = socket.gethostbyname(socket.gethostname())
 ADDR = (SERVER, PORT)
 #Format kodowania
 FORMAT = 'utf-8'
-
-#Ograniczona liczba klienow 
+#Obecna liczba klientow
+amount_of_clients = 0
+#Ograniczona liczba klientow 
 MAX_CLIENTS = 3
 #Wiadomosc po ktorej klient zostaje rozlaczony
 DISCONNECT_MSG = "!DISCONNECT"
@@ -32,14 +33,20 @@ def allow_new_client(num):
 
 #Funkcja obslugujaca laczacych sie klientow
 def handle_client(conn, addr, is_ok):
-
+    global amount_of_clients
+    #Odlaczenie klienta w przypadku osiagniecia maksymalnej ilosci klientow
     if(is_ok == False):
-        #conn.send("CONN_REFUSED")
         print(f"[CONNETION] {addr} refused.")
+        #Wyslanie klientowi informacji o odrzuceniu polaczenia
+        data = pickle.dumps(False)
+        conn.send(data)
         conn.close()
         return
 
     print(f"[NEW CONNETION] {addr} connected.")
+    #Wyslanie klientowi informacji o przyjeciu polaczenia
+    data = pickle.dumps(True)
+    conn.send(data)
     connected = True
     while connected:
         #Odebranie dlugosci wiadomosci
@@ -59,33 +66,37 @@ def handle_client(conn, addr, is_ok):
                 conn.send(data)
         #Wypisanie logow
         print(f"[{addr}] - - {msg}")
+    #Zmniejszenie liczby klientow
+    amount_of_clients = amount_of_clients - 1
     #Zakonczenie polaczenia
     conn.close()
 
 #Funkcja rozpoczynajca dzialanie serwera
 def start():
+    global amount_of_clients
     try:
         #Przyedzielenie adresu do serwera
         server.bind(ADDR)
         server.listen()
         print(f"[LISTENING] Server is listening in {SERVER}")
         while True:
-            if(allow_new_client(threading.active_count() - 1) == True):
-                #Akceptowanie nadchodzacego polaczenia klienta
-                con, addr = server.accept()
+            print(f"[ACTIVE CONNECTIONS] {amount_of_clients}")
+            #Akceptowanie nadchodzacego polaczenia klienta
+            con, addr = server.accept()
+            if allow_new_client(amount_of_clients):
                 #Kazdy klient jest oddzielnym watkiem
                 thread = threading.Thread(target=handle_client, args=(con, addr,True))
                 thread.start()
-                print(f"[ACTIVE CONNECTIONS] {threading.active_count() - 1}")
+                #Zwiekszenie liczby klientow
+                amount_of_clients = amount_of_clients + 1
             else:
-                con, addr = server.accept()
                 thread = threading.Thread(target=handle_client, args=(con, addr,False))
                 thread.start()
     except KeyboardInterrupt:
         server.close()
         print()
         print("Server has been closed")
-        return
+        exit()
     except OSError:
         print("Error: Unable to start server on given address")
         print("Note: If you're trying to restart server, wait few minutes and try to run it again")
