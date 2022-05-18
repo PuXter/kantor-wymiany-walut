@@ -76,3 +76,14 @@ class SimpleCurrency:
     #Nadpisanie metody __str__
     def __str__(self):
         return " 1 PLN =  " + str(self.value) + " " + self.code 
+
+#Klasa definujaca ilosc i rodzaj danej waluty
+class Balance:
+
+    #Atrybuty waluty takie jak kod i wartosc
+    code = ""
+    amount = 0.0
+
+    #Nadpisanie metody __str__
+    def __str__(self):
+        return str(self.amount) + " " + self.code 
