@@ -11,6 +11,6 @@ Autorzy - [Łukasz Czerwiec](https://github.com/PuXter), [Bartosz Szymczak](http
 - Aplikacja służy do prostej symulacji wymiany walut w oparciu o wątki
 - Zostaną wykorzystane proste aplikacje serwera i klienta, komunikujące się ze sobą za pomocą socketów
 - Klient będzie w stanie podać rodzaj i ilość waluty do przeliczenia
-- Jeden wątek będzie odpowiedzialny za pobranie danych o walutach z [Narodowego Banku Polskeigo](https://www.nbp.pl/home.aspx?f=/kursy/kursya.html) i losowe przekształcanie ich 
+- Jeden wątek będzie odpowiedzialny za pobranie danych o walutach z [Narodowego Banku Polskiego](https://www.nbp.pl/home.aspx?f=/kursy/kursya.html) i losowe przekształcanie ich 
 - Drugi wątek będzie odpowiedzialny za obsługę określonej liczby klientów
 
