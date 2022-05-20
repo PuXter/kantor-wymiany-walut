@@ -5,89 +5,90 @@ import pickle
 
 cd = CurrencyData()
 
-#Dlugosc wiadomosci
+#Message length 
 HEADER = 16
-#Port do wysylania wiadomosci
+#Port which will be used to transport messages
 PORT = 8000
-#IP serwera
+#Sever IP
 SERVER = socket.gethostbyname(socket.gethostname())
-#Struktura adresu
+#Address structure
 ADDR = (SERVER, PORT)
-#Format kodowania
+#Coding format
 FORMAT = 'utf-8'
-#Obecna liczba klientow
+#Current amount of clients
 amount_of_clients = 0
-#Ograniczona liczba klientow 
+#Limited number of clients
 MAX_CLIENTS = 3
-#Wiadomosc po ktorej klient zostaje rozlaczony
+#Message after which client is disconnected
 DISCONNECT_MSG = "!DISCONNECT"
-#Wiadomosc po ktorej wysylana zostaje aktualizacja o danych walut
+#The message after which the update of the given currencies is sent
 REQUEST_DATA_MSG = "!REQ_DATA"
 
-#Stworzenie socketu serwera
+#Define server socket
 server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
+#Function checks if more clients can be allowed
 def allow_new_client(num):
     if(num < MAX_CLIENTS): return True
     else: return False
 
-#Funkcja obslugujaca laczacych sie klientow
+#Function handles connecting clients
 def handle_client(conn, addr, is_ok):
     global amount_of_clients
-    #Odlaczenie klienta w przypadku osiagniecia maksymalnej ilosci klientow
+    #Disconnecting the customer if the maximum number of customers is reached
     if(is_ok == False):
         print(f"[CONNETION] {addr} refused.")
-        #Wyslanie klientowi informacji o odrzuceniu polaczenia
+        #Sending the customer information about the rejection of connection
         data = pickle.dumps(False)
         conn.send(data)
         conn.close()
         return
 
     print(f"[NEW CONNETION] {addr} connected.")
-    #Wyslanie klientowi informacji o przyjeciu polaczenia
+    #Sending the customer information about accepting connection
     data = pickle.dumps(True)
     conn.send(data)
     connected = True
     while connected:
-        #Odebranie dlugosci wiadomosci
+        #Receiving message length
         msg_length = conn.recv(HEADER).decode(FORMAT)
         if msg_length:
             msg_length = int(msg_length)
-            #Dekodowanie wiadomosci
+            #Message decoding
             msg = conn.recv(msg_length).decode(FORMAT)
-            #Odlaczenie klienta po otrzymaniu wlasciwej wiadomosci
+            #Disconnecting the customer after receiving disconnect message
             if msg == DISCONNECT_MSG:
                 connected = False
-            #Przeslanie wiadomosci o walutach po otrzymaniu wlasciwej wiadomosci
+            #Sending currency messages after receiving request message
             if msg == REQUEST_DATA_MSG:
                 thread = threading.Thread(target=cd.getData())
                 thread.start()
                 data = pickle.dumps(cd.getCurrencies())
                 conn.send(data)
-        #Wypisanie logow
+        #Print logs
         print(f"[{addr}] - - {msg}")
-    #Zmniejszenie liczby klientow
+    #Decrease anmount of clients
     amount_of_clients = amount_of_clients - 1
-    #Zakonczenie polaczenia
+    #Close connection
     conn.close()
 
-#Funkcja rozpoczynajca dzialanie serwera
+#Function starts server
 def start():
     global amount_of_clients
     try:
-        #Przyedzielenie adresu do serwera
+        #Binding server address
         server.bind(ADDR)
         server.listen()
         print(f"[LISTENING] Server is listening in {SERVER}")
         while True:
             print(f"[ACTIVE CONNECTIONS] {amount_of_clients}")
-            #Akceptowanie nadchodzacego polaczenia klienta
+            #Accepting the upcoming client connection
             con, addr = server.accept()
             if allow_new_client(amount_of_clients):
-                #Kazdy klient jest oddzielnym watkiem
+                #Every client is a thread
                 thread = threading.Thread(target=handle_client, args=(con, addr,True))
                 thread.start()
-                #Zwiekszenie liczby klientow
+                #Increasing amount of clients
                 amount_of_clients = amount_of_clients + 1
             else:
                 thread = threading.Thread(target=handle_client, args=(con, addr,False))
@@ -102,6 +103,6 @@ def start():
         print("Note: If you're trying to restart server, wait few minutes and try to run it again")
         return
 
-#Info o dzialaniu serwera
+#Starting a server
 print("[STARTING] server is starting...")
 start()

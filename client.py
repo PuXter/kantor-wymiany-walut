@@ -6,54 +6,57 @@ from currency import Currency
 from currency import SimpleCurrency 
 from currency import Balance
 
-#Dlugosc wiadomosci
+#Message length 
 HEADER = 16
-#Port do wysylania wiadomosci
+#Port which will be used to transport messages
 PORT = 8000
-#IP serwera
+#Sever IP
 SERVER = socket.gethostbyname(socket.gethostname())
-#Struktura adresu
+#Address structure
 ADDR = (SERVER, PORT)
-#Format kodowania
+#Coding format
 FORMAT = 'utf-8'
 
-#Wiadomosc po ktorej klient zostaje rozlaczony
+#Message after which client will be disconnected from server
 DISCONNECT_MSG = "!DISCONNECT"
-#Wiadomosc po ktorej wysylana zostaje aktualizacja o danych walut
+#Message after which client will recieve currency update
 REQUEST_DATA_MSG = "!REQ_DATA"
 
-#Stworzenie socketu klienta
+#Define client socket
 client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-#Flaga oczekiwania na wiadomosc
+#Flag which indicates waiting for message from server
 rec_msg = False
 
-#Wiadomosc o ostatniej aktualizacji danych walut
+#Message that shows last currency update time
 timestamp = ""
 
-#Tablica z danymi o walutach
+#Currency array
 currencies = []
 
-#Tablica z uproszczonymi danymi do przeliczania
+#Simplified currencies array
 simple_currencies = []
 
-#Tablica z przeliczonymi walutami
+#Balance array
 balance = []
 
-#Funkcja sluzy do przeliczania walut
+#Function converts currencies
+#c_amount - amount of currency that's going to be calculated
+#c_from - currency code from which result's going to be calculated
+#c_to - currency code to which result's going to be calculated
 def count_currencies(c_amount, c_from,c_to):
     
-    #Bledem przy podaniu doanych do przeliczenia jest ilosc ktora nie jest numerem ani cyfrą
+    #If currency amount isn't a digit, function returns error
     if not c_amount.isdigit():
         print("Error: Invalid given data")
         return -1
 
-    #Bledem przy podaniu doanych do przeliczenia jest zerowa ilosc lub przeliczanie tych samych walut
+    #If given amount is less than 0 or given currencies are the same, functions return error
     if float(c_amount) <= 0 or c_from == c_to:
         print("Error: Invalid given data")
         return -1
 
-    #Upewnienie się że podane kody walut sa napisane duzymi literami
+    #Ensuring that currencies are upper cased
     c_from=c_from.upper()
     c_to=c_to.upper()
 
@@ -61,48 +64,54 @@ def count_currencies(c_amount, c_from,c_to):
     cf = SimpleCurrency()
     ct = SimpleCurrency()
 
-    #Wyszukanie waluty w tablicy walut
+    #Searching for given currencies in currency array
     for data in simple_currencies:
         if(data.code==c_from):
             cf = data
         if(data.code==c_to):
             ct = data
 
-    #Pledem przy przeliczaniu walut jest nieznaleznienie jej ilość podanej waulty 
+    #If currencies haven't been found, function returns error
     if(ct.code=="" or cf.code=="" or float(ct.value)==0.0 or float(cf.value)==0.0): 
         print("Error: Given currency code is invalid")
         return -1
 
-    #Przeliczenie i wyswietlenie wyniku
+    #Converting currencies
     result = round( (float(c_amount) / float(cf.value)) * float(ct.value)  , 3)
     return result
 
+#Functions updates balance
+#c_amount - amount of currency that's going to be calculated
+#c_from - currency code from which result's going to be calculated
+#c_to - currency code to which result's going to be calculated
 def update_balance(c_amount, c_from,c_to):
 
-    #Blad przy przeliczeniu walut jest bledem przy aktualizacji salda
-    if count_currencies == -1:
+    #If currency arguments are invalid, count_currencies returns error, than function returns error
+    if count_currencies(c_amount, c_from,c_to) == -1:
         return -1
     
+    #If currency amount isn't a digit, function returns error
     if not c_amount.isdigit():
         print("Error: Invalid given data")
         return -1
     
+    #Ensuring that currencies are upper cased
     c_from=c_from.upper()
     c_to=c_to.upper()
 
-    #Odnalezienie waluty w dostepnym saldzie do przewalutowania
+    #Finding given currencies, from which result's going to be calculated, in current balance array
     fb = Balance()
     for b in balance:
         if(c_from==b.code):
             fb.code=b.code
             fb.amount=b.amount
     
-    #Brak odnalezienia waluty jest bledem
+    #If currencies haven't been found, function returns error
     if fb.code=="":
         print("There is no given currency in your balance")
         return -1
     
-    #Aktualizacja waluty z ktorej pobieramy pieniadze do przewalutowania
+    #Currency update from which we collect money for currency conversion
     for b in balance:
         if(c_from==b.code):
             if b.amount == 0 or float(c_amount) > b.amount:
@@ -113,58 +122,59 @@ def update_balance(c_amount, c_from,c_to):
                 if b.amount == 0:
                     balance.remove(b)
            
-    #Wynik operacji przewalutowania (ilosc docelowej waluty)
+    #Converting currencies
     result = count_currencies(c_amount, c_from,c_to)
     
-    #Aktualizacja waluty do ktorej przewalutowujemy jesli widnieje w saldzie  
+    #Updating the currency to which we will convert money to currency conversion, if it's already in balance array
     for b in balance:
         if(c_to==b.code):
             b.amount = b.amount + result
             return
         
-    #Aktualizacja waluty do ktorej przewalutowujemy jesli nie widnieje w saldzie  
+    #Updating the currency to which we will convert money to currency conversion, if it's not in balance array 
     b = Balance()
     b.amount = result
     b.code = c_to.upper()
     balance.append(b)    
 
-#Funkcja do aktualizacji danych o walutach
+#Function updates currency array
+#data - downloaded currency data
 def update_currencies(data):
     currencies.clear()
     i = 0
-    #Czytanie ostatnich danych
+    #Reading last data updates
     for line in reversed(data):
         if(i < 34):
-            #Wyluskanie odpowidnich informacji z tekstu
+            #Getting correct informations from downloaded text
             res = " ".join(reversed(line.split(" ")))
             res = res.split()
-            #Stworzenie obiektu waluty
+            #Currency object instance
             c = Currency()
             c.name = line.rsplit(' 1',2)[0]  
             c.code = str(res[2]) + " " + str(res[1])
             c.value = float(res[0])
-            #Dodanie waluty do tablicy
+            #Adding currency to currency array
             currencies.append(c)
             i = i + 1
 
-#Funkcja upraszczajaca waluty do przeliczania
+#Function simplifies downloaded currencies for converting
 def simplify_currencies(curr):
     simple_currencies.clear()
     for data in curr:
-        #Stworzenie obiektu uproszczonej waluty
+        #SimpleCurrency object instance
         sc = SimpleCurrency()
         v = float(data.code.rsplit()[0])
         sc.value = round(v/data.value, 3)
         sc.code = data.code.rsplit()[1]
         simple_currencies.append(sc)
-    #Dodanie informacji o kursie zlotowki w celu ewentualnych przeliczen
+    #Adding information about the zloty exchange rate for possible conversions
     pln = SimpleCurrency()
     pln.value = 1.0
     pln.code = "PLN"
     simple_currencies.append(pln)
 
 
-#Funkjca wyswietlajaca menu dla klienta
+#Function prints basic menu
 def menu():
     print()
     if(timestamp!=""):
@@ -176,84 +186,85 @@ def menu():
     print("3 - Count currencies")
     print()
 
-#Funkcja wyswietlajaca stan salda
+#Functions prints avaliable balance
 def show_balance():
     print("Current balance avaliable:")
     for b in balance:
         print(b)
     print()
 
-#Funkcja wysylajaca wiadomosc do serwera
+#Function sends message to server
+#msg - message that will be send to server
 def send(msg):
     try:
-        #Kodowanie wiadomosci
+        #Encoding message
         message = msg.encode(FORMAT)
-        #Dlugosc wiadomosci
+        #Message length
         msg_length = len(message)
-        #Wyslanie dlugosci tekstu
+        #Sending message length
         send_length = str(msg_length).encode(FORMAT)
-        #Dodanie ew brakujących bitów do wiadomosci dlugosci tekstu
+        #Adding any missing bits to the text length message
         send_length += b' ' * (HEADER - len(send_length))
-        #Wyslanie informacji o dlugosci wiadomosci
+        #Sending information about the length of the message
         client.send(send_length)
-        #Wyslanie wiadmosci
+        #Sending message
         client.send(message)
-        #Jesli flaga rec_msg ustawiona na true (przygotowanie do odebrania wiadomosci od serwera)
+        #If rec_msg set on true (ready to recieve message from server)
         if (rec_msg):
-            #Dlugosc pobranej wiadomosci
+            #Recieved message length
             msg_length = client.recv(102400)
             if msg_length is not None:
-                #Zaladowanie danych o walutach
+                #Loading currency data
                 data = pickle.loads(msg_length)
-                #Zaktualizowanie danych klienta o walutach
+                #Updating client currency data
                 update_currencies(data)
     except BrokenPipeError:
         print("Error: Connection with server has been broken")
         exit()
 
-#Polaczenie z serwerem
+#Connecting to server
 try:
     client.connect(ADDR)
 except ConnectionRefusedError:
     print("Error: Unable to contact server")
     exit()
     
-#Pobranie wiadomosci o akceptacji klienta
+#Downloading clients acceptance messages
 msg_length = client.recv(102400)
 if msg_length is not None:
     data = pickle.loads(msg_length)
     
-#Jesli niezaakceptowano klienta to wyswietla sie blad
+#If the customer is not accepted, error will be displayed
 if not data:
     send(DISCONNECT_MSG)
     print("Error: Unable to connect to server")
     print("Reason: Reached maximum numbers of clients")
     exit()
 
-#Definicja i dodanie poczatkowego salda
+#Adding an initial balance
 start_balance = Balance()
 start_balance.code = "PLN"
 start_balance.amount = 10000.0
 balance.append(start_balance)
-#Proste menu klienta
+#Display of basic client menu
 menu()
-#Wyswietlenie aktualnego salda
+#Display of the current balance
 show_balance()
 inp = input("> ")
 while(inp != "0"):
-    #1 - aktualizacja danych o walutach
+    #1 - currency data update
     if(inp=="1"):
         rec_msg = True
         send(REQUEST_DATA_MSG)
         now = datetime.now()
         timestamp = now.strftime("%H:%M:%S")
         simplify_currencies(currencies)
-    #2 - wyswietlenie danych o walutach
+    #2 - display currency data
     elif(inp=="2"):
         if(len(simple_currencies) > 0):
             for cur in simple_currencies:
                 print(cur)  
-    #3 - przeliczanie podanych walut
+    #3 - conversion of given currencies
     elif(inp=="3"):
         amount = input("How many? ")
         curr_from = input("From which currency? ")
@@ -267,6 +278,6 @@ while(inp != "0"):
     show_balance()
     inp = input("> ")
 
-#Rozlaczenie po komendzie "0"
+#Disconnect after command "0"
 rec_msg = False
 send(DISCONNECT_MSG)
