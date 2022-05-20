@@ -106,6 +106,8 @@ def update_balance(c_amount, c_from,c_to):
                 return -1
             else:
                 b.amount = b.amount - float(c_amount)
+                if b.amount == 0:
+                    balance.remove(b)
             
     result = count_currencies(c_amount, c_from,c_to)
     
