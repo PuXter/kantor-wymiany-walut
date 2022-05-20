@@ -14,3 +14,5 @@ Autorzy - [Łukasz Czerwiec](https://github.com/PuXter), [Bartosz Szymczak](http
 - Jeden wątek będzie odpowiedzialny za pobranie danych o walutach z [Narodowego Banku Polskiego](https://www.nbp.pl/home.aspx?f=/kursy/kursya.html) i losowe przekształcanie ich 
 - Drugi wątek będzie odpowiedzialny za obsługę określonej liczby klientów
 
+# Demo
+![Kantor Demo](demo/demo.gif)
