@@ -43,14 +43,17 @@ balance = []
 #Funkcja sluzy do przeliczania walut
 def count_currencies(c_amount, c_from,c_to):
     
+    #Bledem przy podaniu doanych do przeliczenia jest ilosc ktora nie jest numerem ani cyfrą
     if not c_amount.isdigit():
         print("Error: Invalid given data")
         return -1
 
+    #Bledem przy podaniu doanych do przeliczenia jest zerowa ilosc lub przeliczanie tych samych walut
     if float(c_amount) <= 0 or c_from == c_to:
         print("Error: Invalid given data")
         return -1
 
+    #Upewnienie się że podane kody walut sa napisane duzymi literami
     c_from=c_from.upper()
     c_to=c_to.upper()
 
@@ -65,6 +68,7 @@ def count_currencies(c_amount, c_from,c_to):
         if(data.code==c_to):
             ct = data
 
+    #Pledem przy przeliczaniu walut jest nieznaleznienie jej ilość podanej waulty 
     if(ct.code=="" or cf.code=="" or float(ct.value)==0.0 or float(cf.value)==0.0): 
         print("Error: Given currency code is invalid")
         return -1
@@ -108,7 +112,8 @@ def update_balance(c_amount, c_from,c_to):
                 b.amount = b.amount - float(c_amount)
                 if b.amount == 0:
                     balance.remove(b)
-            
+           
+    #Wynik operacji przewalutowania (ilosc docelowej waluty)
     result = count_currencies(c_amount, c_from,c_to)
     
     #Aktualizacja waluty do ktorej przewalutowujemy jesli widnieje w saldzie  
@@ -146,11 +151,13 @@ def update_currencies(data):
 def simplify_currencies(curr):
     simple_currencies.clear()
     for data in curr:
+        #Stworzenie obiektu uproszczonej waluty
         sc = SimpleCurrency()
         v = float(data.code.rsplit()[0])
         sc.value = round(v/data.value, 3)
         sc.code = data.code.rsplit()[1]
         simple_currencies.append(sc)
+    #Dodanie informacji o kursie zlotowki w celu ewentualnych przeliczen
     pln = SimpleCurrency()
     pln.value = 1.0
     pln.code = "PLN"
@@ -210,11 +217,13 @@ try:
 except ConnectionRefusedError:
     print("Error: Unable to contact server")
     exit()
-
+    
+#Pobranie wiadomosci o akceptacji klienta
 msg_length = client.recv(102400)
 if msg_length is not None:
     data = pickle.loads(msg_length)
-
+    
+#Jesli niezaakceptowano klienta to wyswietla sie blad
 if not data:
     send(DISCONNECT_MSG)
     print("Error: Unable to connect to server")
@@ -228,6 +237,7 @@ start_balance.amount = 10000.0
 balance.append(start_balance)
 #Proste menu klienta
 menu()
+#Wyswietlenie aktualnego salda
 show_balance()
 inp = input("> ")
 while(inp != "0"):
