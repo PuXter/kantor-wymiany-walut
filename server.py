@@ -1,22 +1,22 @@
 import socket
 import threading
-from currency import CurrencyData
 import pickle
+from currency import CurrencyData
 
-cd = CurrencyData()
+CD = CurrencyData()
 
-#Message length 
+#Message length
 HEADER = 16
 #Port which will be used to transport messages
 PORT = 8000
 #Sever IP
-SERVER = socket.gethostbyname(socket.gethostname())
+SERVER_IP = socket.gethostbyname(socket.gethostname())
 #Address structure
-ADDR = (SERVER, PORT)
+ADDR = (SERVER_IP, PORT)
 #Coding format
 FORMAT = 'utf-8'
 #Current amount of clients
-amount_of_clients = 0
+AMOUNT_OF_CLIENTS = 0
 #Limited number of clients
 MAX_CLIENTS = 3
 #Message after which client is disconnected
@@ -25,18 +25,19 @@ DISCONNECT_MSG = "!DISCONNECT"
 REQUEST_DATA_MSG = "!REQ_DATA"
 
 #Define server socket
-server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+SERVER = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
 #Function checks if more clients can be allowed
 def allow_new_client(num):
-    if(num < MAX_CLIENTS): return True
-    else: return False
+    if num < MAX_CLIENTS: 
+        return True
+    return False
 
 #Function handles connecting clients
 def handle_client(conn, addr, is_ok):
-    global amount_of_clients
+    global AMOUNT_OF_CLIENTS
     #Disconnecting the customer if the maximum number of customers is reached
-    if(is_ok == False):
+    if not is_ok:
         print(f"[CONNETION] {addr} refused.")
         #Sending the customer information about the rejection of connection
         data = pickle.dumps(False)
@@ -61,40 +62,40 @@ def handle_client(conn, addr, is_ok):
                 connected = False
             #Sending currency messages after receiving request message
             if msg == REQUEST_DATA_MSG:
-                thread = threading.Thread(target=cd.getData())
+                thread = threading.Thread(target=CD.get_data())
                 thread.start()
-                data = pickle.dumps(cd.getCurrencies())
+                data = pickle.dumps(CD.get_currencies())
                 conn.send(data)
         #Print logs
         print(f"[{addr}] - - {msg}")
     #Decrease anmount of clients
-    amount_of_clients = amount_of_clients - 1
+    AMOUNT_OF_CLIENTS = AMOUNT_OF_CLIENTS - 1
     #Close connection
     conn.close()
 
 #Function starts server
 def start():
-    global amount_of_clients
+    global AMOUNT_OF_CLIENTS
     try:
         #Binding server address
-        server.bind(ADDR)
-        server.listen()
-        print(f"[LISTENING] Server is listening in {SERVER}")
+        SERVER.bind(ADDR)
+        SERVER.listen()
+        print(f"[LISTENING] Server is listening in {SERVER_IP}")
         while True:
-            print(f"[ACTIVE CONNECTIONS] {amount_of_clients}")
+            print(f"[ACTIVE CONNECTIONS] {AMOUNT_OF_CLIENTS}")
             #Accepting the upcoming client connection
-            con, addr = server.accept()
-            if allow_new_client(amount_of_clients):
+            con, addr = SERVER.accept()
+            if allow_new_client(AMOUNT_OF_CLIENTS):
                 #Every client is a thread
-                thread = threading.Thread(target=handle_client, args=(con, addr,True))
+                thread = threading.Thread(target=handle_client, args=(con, addr, True))
                 thread.start()
                 #Increasing amount of clients
-                amount_of_clients = amount_of_clients + 1
+                AMOUNT_OF_CLIENTS = AMOUNT_OF_CLIENTS + 1
             else:
-                thread = threading.Thread(target=handle_client, args=(con, addr,False))
+                thread = threading.Thread(target=handle_client, args=(con, addr, False))
                 thread.start()
     except KeyboardInterrupt:
-        server.close()
+        SERVER.close()
         print()
         print("Server has been closed")
         exit()

@@ -5,11 +5,11 @@ import random
 #Page with currency data
 URL = 'https://www.nbp.pl/home.aspx?f=/kursy/kursya.html'
 #Get response from bank page
-page = get(URL)
+PAGE = get(URL)
 #Page content
-bs = BeautifulSoup(page.content, "html.parser")
+BS = BeautifulSoup(PAGE.content, "html.parser")
 #Currency array
-currencies = [] 
+CURRENCIES = []
 
 #Currency class defines its atributes
 class Currency:
@@ -28,51 +28,51 @@ class CurrencyData:
 
     #Constructor overwrite, initialize currency array
     def __init__(self):
-        self.currencies = []
+        self.CURRENCIES = []
 
     #Method returns current currency array
-    def getCurrencies(self):
-        return self.currencies
+    def get_currencies(self):
+        return self.CURRENCIES
 
     #Method downloads current currency data
-    def getData(self, currencies=None):
-        
+    def get_data(self):
+
         #Finding correct page components
-        table = bs.find("table", class_='nbptable')
+        table = BS.find("table", class_='nbptable')
         body = table.find("tbody")
 
         i = 0
         for data in body.find_all("tr"):
             cur = Currency()
             for x in data.find_all("td"):
-                if(i==0):
+                if i == 0:
                     cur.name = x.get_text()
-                if(i==1):
+                if i == 1:
                     cur.code = x.get_text()
-                if(i==2):
-                    v = float(x.get_text().replace(',','.'))
+                if i == 2:
+                    v = float(x.get_text().replace(',', '.'))
                     r = random.uniform(0.95, 1.05)
-                    cur.value = round(v*r,3)
+                    cur.value = round(v*r, 3)
                 i = i + 1
-                if(i==3):
+                if i == 3:
                     i = 0
-                    self.currencies.append(cur.__str__())
+                    self.CURRENCIES.append(cur.__str__())
 
     #Method prints current currency array
-    def showData(self):
-        for cur in currencies:
+    def show_data():
+        for cur in CURRENCIES:
             print(cur)
 
 #SimpleCurrency class defines simpler form of currency
 class SimpleCurrency:
-    
+
     #Atributes such as code and value
     code = ""
     value = 0.0
 
     #__str__ method overwrite
     def __str__(self):
-        return " 1 PLN =  " + str(self.value) + " " + self.code 
+        return " 1 PLN =  " + str(self.value) + " " + self.code
 
 #Balance class defines amount and code of local currency balance items
 class Balance:
@@ -83,4 +83,4 @@ class Balance:
 
     #__str__ method overwrite
     def __str__(self):
-        return str(self.amount) + " " + self.code 
+        return str(self.amount) + " " + self.code
