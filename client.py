@@ -220,62 +220,63 @@ def send(msg):
         print("Error: Connection with server has been broken")
         exit()
 
-#Connecting to server
-try:
-    CLIENT.connect(ADDR)
-except ConnectionRefusedError:
-    print("Error: Unable to contact server")
-    exit()
+if __name__ == '__main__':
+    #Connecting to server
+    try:
+        CLIENT.connect(ADDR)
+    except ConnectionRefusedError:
+        print("Error: Unable to contact server")
+        exit()
 
-#Downloading clients acceptance messages
-MSG_LENGTH = CLIENT.recv(102400)
-if MSG_LENGTH is not None:
-    DATA = pickle.loads(MSG_LENGTH)
+    #Downloading clients acceptance messages
+    MSG_LENGTH = CLIENT.recv(102400)
+    if MSG_LENGTH is not None:
+        DATA = pickle.loads(MSG_LENGTH)
 
-#If the customer is not accepted, error will be displayed
-if not DATA:
-    send(DISCONNECT_MSG)
-    print("Error: Unable to connect to server")
-    print("Reason: Reached maximum numbers of clients")
-    exit()
+    #If the customer is not accepted, error will be displayed
+    if not DATA:
+        send(DISCONNECT_MSG)
+        print("Error: Unable to connect to server")
+        print("Reason: Reached maximum numbers of clients")
+        exit()
 
-#Adding an initial balance
-START_BALANCE = Balance()
-START_BALANCE.code = "PLN"
-START_BALANCE.amount = 10000.0
-BALANCE.append(START_BALANCE)
-#Display of basic client menu
-menu()
-#Display of the current balance
-show_balance()
-INP = input("> ")
-while INP != "0":
-    #1 - currency data update
-    if INP == "1":
-        REC_MSG = True
-        send(REQUEST_DATA_MSG)
-        NOW = datetime.now()
-        TIMESTAMP = NOW.strftime("%H:%M:%S")
-        simplify_currencies(CURRENCIES)
-    #2 - display currency data
-    elif INP == "2":
-        if len(SIMPLE_CURRENCIES) > 0:
-            for cur in SIMPLE_CURRENCIES:
-                print(cur)
-    #3 - conversion of given currencies
-    elif INP == "3":
-        AMOUNT = input("How many? ")
-        CURR_FROM = input("From which currency? ")
-        CURR_TO = input("To which currency? ")
-        if count_currencies(AMOUNT, CURR_FROM, CURR_TO) != -1:
-            update_balance(AMOUNT, CURR_FROM, CURR_TO)
-    else:
-        REC_MSG = False
-        print("Error: Invalid command")
+    #Adding an initial balance
+    START_BALANCE = Balance()
+    START_BALANCE.code = "PLN"
+    START_BALANCE.amount = 10000.0
+    BALANCE.append(START_BALANCE)
+    #Display of basic client menu
     menu()
+    #Display of the current balance
     show_balance()
     INP = input("> ")
+    while INP != "0":
+        #1 - currency data update
+        if INP == "1":
+            REC_MSG = True
+            send(REQUEST_DATA_MSG)
+            NOW = datetime.now()
+            TIMESTAMP = NOW.strftime("%H:%M:%S")
+            simplify_currencies(CURRENCIES)
+        #2 - display currency data
+        elif INP == "2":
+            if len(SIMPLE_CURRENCIES) > 0:
+                for cur in SIMPLE_CURRENCIES:
+                    print(cur)
+        #3 - conversion of given currencies
+        elif INP == "3":
+            AMOUNT = input("How many? ")
+            CURR_FROM = input("From which currency? ")
+            CURR_TO = input("To which currency? ")
+            if count_currencies(AMOUNT, CURR_FROM, CURR_TO) != -1:
+                update_balance(AMOUNT, CURR_FROM, CURR_TO)
+        else:
+            REC_MSG = False
+            print("Error: Invalid command")
+        menu()
+        show_balance()
+        INP = input("> ")
 
-#Disconnect after command "0"
-REC_MSG = False
-send(DISCONNECT_MSG)
+    #Disconnect after command "0"
+    REC_MSG = False
+    send(DISCONNECT_MSG)

@@ -104,6 +104,7 @@ def start():
         print("Note: If you're trying to restart server, wait few minutes and try to run it again")
         return
 
-#Starting a server
-print("[STARTING] server is starting...")
-start()
+if __name__ == '__main__':
+    #Starting a server
+    print("[STARTING] server is starting...")
+    start()
