@@ -51,23 +51,28 @@ def handle_client(conn, addr, is_ok):
     conn.send(data)
     connected = True
     while connected:
-        #Receiving message length
-        msg_length = conn.recv(HEADER).decode(FORMAT)
-        if msg_length:
-            msg_length = int(msg_length)
-            #Message decoding
-            msg = conn.recv(msg_length).decode(FORMAT)
-            #Disconnecting the customer after receiving disconnect message
-            if msg == DISCONNECT_MSG:
-                connected = False
-            #Sending currency messages after receiving request message
-            if msg == REQUEST_DATA_MSG:
-                thread = threading.Thread(target=CD.get_data())
-                thread.start()
-                data = pickle.dumps(CD.get_currencies())
-                conn.send(data)
-        #Print logs
-        print(f"[{addr}] - - {msg}")
+        try:
+            #Receiving message length
+            msg_length = conn.recv(HEADER).decode(FORMAT)
+            if msg_length:
+                msg_length = int(msg_length)
+                #Message decoding
+                msg = conn.recv(msg_length).decode(FORMAT)
+                #Disconnecting the customer after receiving disconnect message
+                if msg == DISCONNECT_MSG:
+                    connected = False
+                #Sending currency messages after receiving request message
+                if msg == REQUEST_DATA_MSG:
+                    thread = threading.Thread(target=CD.get_data())
+                    thread.start()
+                    data = pickle.dumps(CD.get_currencies())
+                    conn.send(data)
+            #Print logs
+            print(f"[{addr}] - - {msg}")
+        except (UnboundLocalError):
+            AMOUNT_OF_CLIENTS = AMOUNT_OF_CLIENTS - 1
+            conn.close()
+            return
     #Decrease anmount of clients
     AMOUNT_OF_CLIENTS = AMOUNT_OF_CLIENTS - 1
     #Close connection

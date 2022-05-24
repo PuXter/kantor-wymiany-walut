@@ -275,7 +275,10 @@ if __name__ == '__main__':
             print("Error: Invalid command")
         menu()
         show_balance()
-        INP = input("> ")
+        try:
+            INP = input("> ")
+        except (KeyboardInterrupt):
+            INP = "0"
 
     #Disconnect after command "0"
     REC_MSG = False
