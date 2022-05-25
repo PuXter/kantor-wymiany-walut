@@ -8,7 +8,7 @@ Prowadzący -  [Mgr inż. Tomasz Szandała](https://github.com/szandala)
 Autorzy - [Łukasz Czerwiec](https://github.com/PuXter), [Bartosz Szymczak](https://github.com/PewPewBartula)
 
 **Skąd taki pomysł na projekt?**:
-W ramach prjektu chcieliśmy stworzyć aplikację, która miałaby realne zastosowanie jako wsparcie określonej firmy. Dodatkowo, jako przyszli zaawansowani informatycy, chcieliśmy przyzwyczaić się do obsługiwania wielwalutowych kont z pokaźnym stanem salda. 
+- W ramach projektu chcieliśmy stworzyć aplikację, która miałaby realne zastosowanie jako wsparcie określonej firmy. Dodatkowo, jako przyszli zaawansowani informatycy, chcieliśmy przyzwyczaić się do obsługiwania wielwalutowych kont z pokaźnym stanem salda. 
 
 **Założenia programu**:
 - Aplikacja służy do prostej symulacji wymiany walut w oparciu o wątki
