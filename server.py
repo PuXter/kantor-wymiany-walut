@@ -5,16 +5,12 @@ from currency import CurrencyData
 
 CD = CurrencyData()
 
-#Message length
-HEADER = 16
 #Port which will be used to transport messages
 PORT = 8000
 #Sever IP
 SERVER_IP = socket.gethostbyname(socket.gethostname())
 #Address structure
 ADDR = (SERVER_IP, PORT)
-#Coding format
-FORMAT = 'utf-8'
 #Current amount of clients
 AMOUNT_OF_CLIENTS = 0
 #Limited number of clients
@@ -46,18 +42,17 @@ def handle_client(conn, addr, is_ok):
         return
 
     print(f"[NEW CONNETION] {addr} connected.")
-    #Sending the customer information about accepting connection
+    #Sending client information about accepting connection
     data = pickle.dumps(True)
     conn.send(data)
+    
     connected = True
     while connected:
-        try:
+        try: 
             #Receiving message length
-            msg_length = conn.recv(HEADER).decode(FORMAT)
+            msg_length = conn.recv(102400)  
             if msg_length:
-                msg_length = int(msg_length)
-                #Message decoding
-                msg = conn.recv(msg_length).decode(FORMAT)
+                msg = pickle.loads(msg_length)
                 #Disconnecting the customer after receiving disconnect message
                 if msg == DISCONNECT_MSG:
                     connected = False
@@ -69,6 +64,7 @@ def handle_client(conn, addr, is_ok):
                     conn.send(data)
             #Print logs
             print(f"[{addr}] - - {msg}")
+              
         except (UnboundLocalError):
             AMOUNT_OF_CLIENTS = AMOUNT_OF_CLIENTS - 1
             conn.close()

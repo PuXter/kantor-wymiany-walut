@@ -5,16 +5,12 @@ from currency import Currency
 from currency import SimpleCurrency
 from currency import Balance
 
-#Message length
-HEADER = 16
 #Port which will be used to transport messages
 PORT = 8000
 #Sever IP
 SERVER = socket.gethostbyname(socket.gethostname())
 #Address structure
 ADDR = (SERVER, PORT)
-#Coding format
-FORMAT = 'utf-8'
 
 #Message after which client will be disconnected from server
 DISCONNECT_MSG = "!DISCONNECT"
@@ -40,9 +36,6 @@ SIMPLE_CURRENCIES = []
 BALANCE = []
 
 #Function converts currencies
-#c_amount - amount of currency that's going to be calculated
-#c_from - currency code from which result's going to be calculated
-#c_to - currency code to which result's going to be calculated
 def count_currencies(c_amount, c_from, c_to):
 
     #If currency amount isn't a digit, function returns error
@@ -79,9 +72,6 @@ def count_currencies(c_amount, c_from, c_to):
     return result
 
 #Functions updates balance
-#c_amount - amount of currency that's going to be calculated
-#c_from - currency code from which result's going to be calculated
-#c_to - currency code to which result's going to be calculated
 def update_balance(c_amount, c_from, c_to):
 
     #If currency arguments are invalid, count_currencies returns error, than function returns error
@@ -137,7 +127,6 @@ def update_balance(c_amount, c_from, c_to):
     BALANCE.append(b)
 
 #Function updates currency array
-#data - downloaded currency data
 def update_currencies(data):
     CURRENCIES.clear()
     i = 0
@@ -192,19 +181,10 @@ def show_balance():
     print()
 
 #Function sends message to server
-#msg - message that will be send to server
 def send(msg):
     try:
-        #Encoding message
-        message = msg.encode(FORMAT)
-        #Message length
-        MSG_LENGTH = len(message)
-        #Sending message length
-        send_length = str(MSG_LENGTH).encode(FORMAT)
-        #Adding any missing bits to the text length message
-        send_length += b' ' * (HEADER - len(send_length))
-        #Sending information about the length of the message
-        CLIENT.send(send_length)
+        #Compression data to send
+        message = pickle.dumps(msg)
         #Sending message
         CLIENT.send(message)
         #If REC_MSG set on true (ready to recieve message from server)
