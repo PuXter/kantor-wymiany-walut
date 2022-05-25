@@ -19,6 +19,8 @@ MAX_CLIENTS = 3
 DISCONNECT_MSG = "!DISCONNECT"
 #The message after which the update of the given currencies is sent
 REQUEST_DATA_MSG = "!REQ_DATA"
+#Message which defines a broken connection
+BROKEN_CONNECTION = "!BROKEN_CONNECTION"
 
 #Define server socket
 SERVER = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -32,6 +34,7 @@ def allow_new_client(num):
 #Function handles connecting clients
 def handle_client(conn, addr, is_ok):
     global AMOUNT_OF_CLIENTS
+    global msg
     #Disconnecting the customer if the maximum number of customers is reached
     if not is_ok:
         print(f"[CONNETION] {addr} refused.")
@@ -48,7 +51,7 @@ def handle_client(conn, addr, is_ok):
     
     connected = True
     while connected:
-        try: 
+        try:
             #Receiving message length
             msg_length = conn.recv(102400)  
             if msg_length:
@@ -64,7 +67,12 @@ def handle_client(conn, addr, is_ok):
                     conn.send(data)
             #Print logs
             print(f"[{addr}] - - {msg}")
-              
+            #Handles broken connection
+            if msg == BROKEN_CONNECTION:
+                AMOUNT_OF_CLIENTS = AMOUNT_OF_CLIENTS - 1
+                conn.close()
+                return
+            msg = BROKEN_CONNECTION
         except (UnboundLocalError):
             AMOUNT_OF_CLIENTS = AMOUNT_OF_CLIENTS - 1
             conn.close()
